@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>aspnet-ProvaTecnica.Web-5032ae42-3219-4637-894a-35aff2d62923</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Update="Data\app.db" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.13" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.13" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.13" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.13" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ProvaTecnica.Core\ProvaTecnica.Core.csproj" />
+    </ItemGroup>
+
+</Project>
