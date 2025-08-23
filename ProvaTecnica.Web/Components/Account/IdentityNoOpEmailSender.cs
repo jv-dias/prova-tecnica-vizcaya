@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using ProvaTecnica.Web.Data;
+using ProvaTecnica.Core.Entities;
 
 namespace ProvaTecnica.Web.Components.Account;
 

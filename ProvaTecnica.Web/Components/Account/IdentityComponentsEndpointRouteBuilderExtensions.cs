@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using ProvaTecnica.Core.Entities;
 using ProvaTecnica.Web.Components.Account.Pages;
 using ProvaTecnica.Web.Components.Account.Pages.Manage;
-using ProvaTecnica.Web.Data;
 
 namespace Microsoft.AspNetCore.Routing;
 
