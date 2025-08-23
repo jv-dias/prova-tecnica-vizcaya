@@ -7,6 +7,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{7B3D94DE-8835-4F6A-82D8-3FE589A23CEC}"
 	ProjectSection(SolutionItems) = preProject
 		diario.md = diario.md
+		Estrutura do Projeto.md = Estrutura do Projeto.md
 	EndProjectSection
 EndProject
 Global
