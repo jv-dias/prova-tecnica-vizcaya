@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using ProvaTecnica.Core.Data; 
 using ProvaTecnica.Web.Components;
 using ProvaTecnica.Web.Components.Account;
-using ProvaTecnica.Core.Entities; 
+using ProvaTecnica.Core.Entities;
+using ProvaTecnica.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,10 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ViaCepService>();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -34,7 +39,7 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// Configuramos o Identity para usar nosso ApplicationDbContext
+// Configuramos o Identity para usar o ApplicationDbContext
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true) // <-- MUDANÇA AQUI
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
