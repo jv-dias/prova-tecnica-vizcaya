@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace ProvaTecnica.Core.Entities
 {
@@ -30,6 +31,7 @@ namespace ProvaTecnica.Core.Entities
 		[MaxLength(100)]
 		public string Bairro { get; set; } = string.Empty;
         
+		[JsonPropertyName("localidade")]
 		[MaxLength(100)]
 		public string Cidade { get; set; } = string.Empty;
         

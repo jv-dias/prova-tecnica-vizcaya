@@ -66,4 +66,18 @@ app.MapRazorComponents<App>()
 
 app.MapAdditionalIdentityEndpoints();
 
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var serviceProvider = scope.ServiceProvider;
+        await ProvaTecnica.Core.Data.Seed.SeedData.InitializeAsync(serviceProvider);
+    }
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Um erro ocorreu durante o processo de Seed do banco de dados.");
+}
+
 app.Run();
