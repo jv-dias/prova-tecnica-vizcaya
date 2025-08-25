@@ -1,0 +1,183 @@
+@page "/alunos/editar/{AlunoId:int}"
+@using ProvaTecnica.Core.Entities
+@using ProvaTecnica.Core.Services
+@inject IAlunoService _alunoService
+@inject ViaCepService _viaCepService
+@inject NavigationManager _navigationManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Editar Aluno</PageTitle>
+
+<h3>Editar Aluno</h3>
+
+@if (aluno is null)
+{
+    <p><em>Carregando dados do aluno...</em></p>
+}
+else
+{
+    <EditForm Model="@aluno" OnValidSubmit="@HandleUpdateSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome Completo</label>
+                    <InputText id="nome" class="form-control" @bind-Value="aluno.Nome" />
+                    <ValidationMessage For="@(() => aluno.Nome)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="cpf" class="form-label">CPF</label>
+                    <InputText id="cpf" class="form-control" @bind-Value="aluno.CPF" />
+                    <ValidationMessage For="@(() => aluno.CPF)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <InputText id="email" type="email" class="form-control" @bind-Value="aluno.Email" />
+                    <ValidationMessage For="@(() => aluno.Email)" />
+                </div>
+                
+                <div class="mb-3 form-check">
+                    <InputCheckbox id="ativo" class="form-check-input" @bind-Value="aluno.Ativo" />
+                    <label for="ativo" class="form-check-label">Ativo</label>
+                </div>
+
+                <hr />
+                <h5>Endereço</h5>
+
+                <div class="mb-3">
+                    <label for="cep" class="form-label">CEP</label>
+                    <div class="input-group">
+                        <InputText id="cep" class="form-control" @bind-Value="aluno.CEP" @onblur="BuscarEnderecoPorCep" />
+                        <span class="input-group-text">@cepMensagem</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="logradouro" class="form-label">Logradouro</label>
+                    <InputText id="logradouro" class="form-control" @bind-Value="aluno.Logradouro" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="complemento" class="form-label">Complemento</label>
+                    <InputText id="complemento" class="form-control" @bind-Value="aluno.Complemento" />
+                </div>
+                
+                <div class="mb-3">
+                    <label for="bairro" class="form-label">Bairro</label>
+                    <InputText id="bairro" class="form-control" @bind-Value="aluno.Bairro" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="cidade" class="form-label">Cidade</label>
+                    <InputText id="cidade" class="form-control" @bind-Value="aluno.Cidade" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="uf" class="form-label">UF</label>
+                    <InputText id="uf" class="form-control" @bind-Value="aluno.UF" />
+                </div>
+
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <div>
+                    <button type="submit" class="btn btn-success">Salvar Alterações</button>
+                    <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-danger" @onclick="HandleDeleteSubmit">Excluir Aluno</button>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">@errorMessage</div>
+        }
+    </EditForm>
+}
+
+
+@code {
+    [Parameter]
+    public int AlunoId { get; set; }
+
+    private Aluno? aluno;
+    private string? cepMensagem;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        aluno = await _alunoService.GetByIdAsync(AlunoId);
+    }
+    
+    //Regra de Negócio: Atualizar Aluno
+    private async Task HandleUpdateSubmit()
+    {
+        if (aluno is null) return;
+        
+        errorMessage = null;
+        try
+        {
+            await _alunoService.UpdateAsync(aluno);
+            _navigationManager.NavigateTo("/alunos");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    //Regra de Negócio: Excluir Aluno
+    private async Task HandleDeleteSubmit()
+    {
+        if (aluno is null) return;
+        
+        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"Tem certeza que deseja excluir o aluno '{aluno.Nome}'?");
+        if (confirmado)
+        {
+            errorMessage = null;
+            try
+            {
+                await _alunoService.DeleteAsync(aluno.Id);
+                _navigationManager.NavigateTo("/alunos");
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+        }
+    }
+    
+    //Regra de negócio: Método para buscar o endereço pelo CEP usando o serviço ViaCepService
+    private async Task BuscarEnderecoPorCep()
+    {
+        if (aluno is null || string.IsNullOrWhiteSpace(aluno.CEP))
+        {
+            cepMensagem = null;
+            return;
+        }
+
+        cepMensagem = "Buscando...";
+        var endereco = await _viaCepService.ConsultarCepAsync(aluno.CEP);
+        if (endereco != null)
+        {
+            aluno.Logradouro = endereco.Logradouro ?? "";
+            aluno.Bairro = endereco.Bairro ?? "";
+            aluno.Cidade = endereco.Localidade ?? "";
+            aluno.UF = endereco.Uf ?? "";
+            cepMensagem = "Encontrado!";
+        }
+        else
+        {
+            cepMensagem = "CEP não encontrado.";
+        }
+    }
+
+    private void Cancelar()
+    {
+        _navigationManager.NavigateTo("/alunos");
+    }
+}

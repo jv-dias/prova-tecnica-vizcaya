@@ -1,0 +1,154 @@
+@page "/alunos/criar"
+@using System.ComponentModel.DataAnnotations
+@using ProvaTecnica.Core.Entities
+@using ProvaTecnica.Core.Services
+@inject IAlunoService _alunoService
+@inject ViaCepService _viaCepService
+@inject NavigationManager _navigationManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Novo Aluno</PageTitle>
+
+<h3>Novo Aluno</h3>
+
+<EditForm EditContext="@editContext" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="nome" class="form-label">Nome Completo</label>
+                <InputText id="nome" class="form-control" @bind-Value="aluno.Nome" />
+                <ValidationMessage For="@(() => aluno.Nome)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="cpf" class="form-label">CPF</label>
+                <InputText id="cpf" class="form-control" @bind-Value="aluno.CPF" />
+                <ValidationMessage For="@(() => aluno.CPF)" />
+            </div>
+            
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <InputText id="email" type="email" class="form-control" @bind-Value="aluno.Email" />
+                <ValidationMessage For="@(() => aluno.Email)" />
+            </div>
+
+            <hr />
+            <h5>Endereço</h5>
+            
+            <div class="mb-3">
+                <label for="cep" class="form-label">CEP</label>
+                <div class="input-group">
+                    <InputText id="cep" class="form-control" @bind-Value="aluno.CEP" @onblur="BuscarEnderecoPorCep" />
+                    <span class="input-group-text">@cepMensagem</span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="logradouro" class="form-label">Logradouro</label>
+                <InputText id="logradouro" class="form-control" @bind-Value="aluno.Logradouro" />
+            </div>
+
+            <div class="mb-3">
+                <label for="complemento" class="form-label">Complemento</label>
+                <InputText id="complemento" class="form-control" @bind-Value="aluno.Complemento" />
+            </div>
+            
+            <div class="mb-3">
+                <label for="bairro" class="form-label">Bairro</label>
+                <InputText id="bairro" class="form-control" @bind-Value="aluno.Bairro" />
+            </div>
+            
+            <div class="mb-3">
+                <label for="cidade" class="form-label">Cidade</label>
+                <InputText id="cidade" class="form-control" @bind-Value="aluno.Cidade" />
+            </div>
+
+            <div class="mb-3">
+                <label for="uf" class="form-label">UF</label>
+                <InputText id="uf" class="form-control" @bind-Value="aluno.UF" />
+            </div>
+
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-success">Salvar</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+        </div>
+    </div>
+
+</EditForm>
+
+
+@code {
+    private Aluno aluno = new();
+    private EditContext? editContext;
+    private string? cepMensagem;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(aluno);
+    }
+    
+    //Método chamado para submeter o formulário
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            await _alunoService.AddAsync(aluno);
+            
+            var cadastrarOutro = await JSRuntime.InvokeAsync<bool>("confirm", "Aluno adicionado com sucesso!\n\nDeseja cadastrar outro aluno?");
+            
+            if (cadastrarOutro)
+            {
+                aluno = new Aluno();
+                editContext = new EditContext(aluno);
+                StateHasChanged();
+            }
+            else
+            {
+                _navigationManager.NavigateTo("/alunos");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", ex.Message);
+        }
+    }
+    
+    //Regra de negócio: Método para buscar o endereço pelo CEP usando o serviço ViaCepService
+    private async Task BuscarEnderecoPorCep()
+    {
+        if (string.IsNullOrWhiteSpace(aluno.CEP))
+        {
+            cepMensagem = null;
+            return;
+        }
+
+        cepMensagem = "Buscando...";
+        var endereco = await _viaCepService.ConsultarCepAsync(aluno.CEP);
+        if (endereco != null)
+        {
+            aluno.Logradouro = endereco.Logradouro ?? "";
+            aluno.Bairro = endereco.Bairro ?? "";
+            aluno.Cidade = endereco.Localidade ?? "";
+            aluno.UF = endereco.Uf ?? "";
+            cepMensagem = "Encontrado!";
+        }
+        else
+        {
+            aluno.Logradouro = "";
+            aluno.Bairro = "";
+            aluno.Cidade = "";
+            aluno.UF = "";
+            cepMensagem = "CEP não encontrado.";
+        }
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Cancelar()
+    {
+        _navigationManager.NavigateTo("/alunos");
+    }
+}

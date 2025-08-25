@@ -1,0 +1,128 @@
+@page "/alunos"
+@using ProvaTecnica.Core.Entities
+@using ProvaTecnica.Core.Services
+@using ProvaTecnica.Web.Components.Shared
+@inject IAlunoService AlunoService
+@inject NavigationManager Navigation
+
+<PageTitle>Lista de Alunos</PageTitle>
+
+<h3>Lista de Alunos</h3>
+
+<div class="card bg-light mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label for="filtroNome" class="form-label">Filtrar por Nome</label>
+                <InputText id="filtroNome" class="form-control" @bind-Value="filtroNome" />
+            </div>
+            <div class="col-md-4">
+                <label for="filtroCpf" class="form-label">Filtrar por CPF</label>
+                <InputText id="filtroCpf" class="form-control" @bind-Value="filtroCpf" />
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-info me-2" @onclick="AplicarFiltros">Filtrar</button>
+                <button class="btn btn-warning" @onclick="LimparFiltros">Limpar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p>
+    <button class="btn btn-primary" @onclick="AdicionarNovoAluno">Adicionar Novo Aluno</button>
+    <button class="btn btn-info" @onclick="ImportarAlunos">Importar via CSV</button>
+</p>
+
+@if (alunos is null)
+{
+    <p><em>Carregando...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var aluno in alunos)
+            {
+                <tr>
+                    <td>@aluno.Nome</td>
+                    <td>@aluno.CPF</td>
+                    <td>@aluno.Email</td>
+                    <td>@(aluno.Ativo ? "Ativo" : "Inativo")</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" @onclick="() => EditarAluno(aluno.Id)">
+                            Editar
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <Paginacao PaginaAtual="paginaAtual" TotalPaginas="totalPaginas" OnPaginaAlterada="OnPaginaAlterada" />
+}
+
+
+@code {
+    private List<Aluno>? alunos;
+    private int paginaAtual = 1;
+    private int tamanhoPagina = 10;
+    private int totalPaginas;
+    private string? filtroNome;
+    private string? filtroCpf;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDados();
+    }
+
+    private async Task CarregarDados()
+    {
+        var resultado = await AlunoService.GetAllAsync(paginaAtual, tamanhoPagina, filtroNome, filtroCpf);
+        alunos = resultado.Items;
+        totalPaginas = (int)Math.Ceiling(resultado.TotalCount / (double)tamanhoPagina);
+    }
+
+    private async Task OnPaginaAlterada(int novaPagina)
+    {
+        paginaAtual = novaPagina;
+        await CarregarDados();
+    }
+    
+    private async Task AplicarFiltros()
+    {
+        paginaAtual = 1;
+        await CarregarDados();
+    }
+    
+    private async Task LimparFiltros()
+    {
+        filtroNome = null;
+        filtroCpf = null;
+        paginaAtual = 1;
+        await CarregarDados();
+    }
+
+    private void AdicionarNovoAluno()
+    {
+        Navigation.NavigateTo("/alunos/criar");
+    }
+
+    private void EditarAluno(int alunoId)
+    {
+        Navigation.NavigateTo($"/alunos/editar/{alunoId}");
+    }
+    
+    private void ImportarAlunos()
+    {
+        Navigation.NavigateTo("/alunos/importar");
+    }
+}

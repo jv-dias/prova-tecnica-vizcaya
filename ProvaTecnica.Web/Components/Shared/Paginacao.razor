@@ -1,0 +1,33 @@
+@if (TotalPaginas > 1)
+{
+    <nav aria-label="Navegação de página">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(PaginaAtual == 1 ? "disabled" : "")">
+                <a class="page-link" href="javascript:void(0)" @onclick="() => OnPaginaAlterada.InvokeAsync(PaginaAtual - 1)">&laquo;</a>
+            </li>
+
+            @for (int i = 1; i <= TotalPaginas; i++)
+            {
+                var numeroPagina = i;
+                <li class="page-item @(PaginaAtual == numeroPagina ? "active" : "")">
+                    <a class="page-link" href="javascript:void(0)" @onclick="() => OnPaginaAlterada.InvokeAsync(numeroPagina)">@numeroPagina</a>
+                </li>
+            }
+
+            <li class="page-item @(PaginaAtual == TotalPaginas ? "disabled" : "")">
+                <a class="page-link" href="javascript:void(0)" @onclick="() => OnPaginaAlterada.InvokeAsync(PaginaAtual + 1)">&raquo;</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+@code {
+    [Parameter]
+    public int PaginaAtual { get; set; }
+
+    [Parameter]
+    public int TotalPaginas { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPaginaAlterada { get; set; }
+}
