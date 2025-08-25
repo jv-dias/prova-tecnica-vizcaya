@@ -26,8 +26,15 @@ builder.Services.AddAuthentication(options =>
     .AddIdentityCookies();
 
 builder.Services.AddHttpClient();
+//Regra de negócio: Implementar Cache nas consultas ao ViaCep
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ViaCepService>();
+
+//Regra de negócio: Implementar serviço de gerenciamento de alunos
+builder.Services.AddScoped<IAlunoService, AlunoService>();
+
+//Regra de negócio: Implementar serviço de importação de CSV
+builder.Services.AddScoped<ICsvImportService, CsvImportService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -40,14 +47,14 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Configuramos o Identity para usar o ApplicationDbContext
-builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true) // <-- MUDANÇA AQUI
+builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
 
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>(); // <-- MUDANÇA AQUI
+builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -65,6 +72,9 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
