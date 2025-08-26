@@ -1,0 +1,84 @@
+@page "/turmas/editar/{TurmaId:int}"
+@using ProvaTecnica.Core.Entities
+@using ProvaTecnica.Core.Services
+@inject ITurmaService TurmaService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Editar Turma</PageTitle>
+
+<h3>Editar Turma</h3>
+
+@if (turma is null)
+{
+    <p><em>Carregando dados da turma...</em></p>
+}
+else
+{
+    <EditForm Model="@turma" OnValidSubmit="@HandleUpdateSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome da Turma</label>
+                    <InputText id="nome" class="form-control" @bind-Value="turma.Nome" />
+                    <ValidationMessage For="@(() => turma.Nome)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="anoLetivo" class="form-label">Ano Letivo</label>
+                    <InputNumber id="anoLetivo" class="form-control" @bind-Value="turma.AnoLetivo" />
+                    <ValidationMessage For="@(() => turma.AnoLetivo)" />
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <div>
+                    <button type="submit" class="btn btn-success">Salvar Alterações</button>
+                    <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-danger" @onclick="HandleDeleteSubmit">Excluir Turma</button>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+}
+
+
+@code {
+    [Parameter]
+    public int TurmaId { get; set; }
+
+    private Turma? turma;
+
+    protected override async Task OnInitializedAsync()
+    {
+        turma = await TurmaService.GetByIdAsync(TurmaId);
+    }
+
+    private async Task HandleUpdateSubmit()
+    {
+        if (turma is null) return;
+        
+        await TurmaService.UpdateAsync(turma);
+        Navigation.NavigateTo("/turmas");
+    }
+
+    private async Task HandleDeleteSubmit()
+    {
+        if (turma is null) return;
+        
+        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"Tem certeza que deseja excluir a turma '{turma.Nome}'?");
+        if (confirmado)
+        {
+            await TurmaService.DeleteAsync(turma.Id);
+            Navigation.NavigateTo("/turmas");
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/turmas");
+    }
+}

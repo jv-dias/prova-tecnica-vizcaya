@@ -1,0 +1,79 @@
+@page "/turmas"
+@using ProvaTecnica.Core.Entities
+@using ProvaTecnica.Core.Services
+@inject ITurmaService TurmaService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Lista de Turmas</PageTitle>
+
+<h3>Lista de Turmas</h3>
+
+<p>
+    <button class="btn btn-primary" @onclick="AdicionarNovaTurma">Adicionar Nova Turma</button>
+</p>
+
+@if (turmas is null)
+{
+    <p><em>Carregando...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Ano Letivo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var turma in turmas)
+            {
+                <tr>
+                    <td>@turma.Nome</td>
+                    <td>@turma.AnoLetivo</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" @onclick="() => EditarTurma(turma.Id)">
+                            Editar
+                        </button>
+                        <button class="btn btn-sm btn-danger ms-2" @onclick="() => ExcluirTurma(turma.Id, turma.Nome)">
+                            Excluir
+                        </button>
+                        </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Turma>? turmas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        turmas = await TurmaService.GetAllAsync();
+    }
+
+    private void AdicionarNovaTurma()
+    {
+        Navigation.NavigateTo("/turmas/criar");
+    }
+
+
+
+    private void EditarTurma(int turmaId)
+    {
+        Navigation.NavigateTo($"/turmas/editar/{turmaId}");
+    }
+    
+    private async Task ExcluirTurma(int turmaId, string? nomeTurma)
+    {
+        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"Tem certeza que deseja excluir a turma '{nomeTurma}'?");
+        if (confirmado)
+        {
+            await TurmaService.DeleteAsync(turmaId);
+            turmas = await TurmaService.GetAllAsync(); 
+        }
+    }
+}

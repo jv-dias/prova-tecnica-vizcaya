@@ -1,0 +1,48 @@
+@page "/turmas/criar"
+@using ProvaTecnica.Core.Entities
+@using ProvaTecnica.Core.Services
+@inject ITurmaService TurmaService
+@inject NavigationManager Navigation
+
+<PageTitle>Nova Turma</PageTitle>
+
+<h3>Nova Turma</h3>
+
+<EditForm Model="@turma" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="nome" class="form-label">Nome da Turma</label>
+                <InputText id="nome" class="form-control" @bind-Value="turma.Nome" />
+                <ValidationMessage For="@(() => turma.Nome)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="anoLetivo" class="form-label">Ano Letivo</label>
+                <InputNumber id="anoLetivo" class="form-control" @bind-Value="turma.AnoLetivo" />
+                <ValidationMessage For="@(() => turma.AnoLetivo)" />
+            </div>
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-success">Salvar</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    private Turma turma = new();
+
+    private async Task HandleValidSubmit()
+    {
+        await TurmaService.AddAsync(turma);
+        Navigation.NavigateTo("/turmas");
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/turmas");
+    }
+}

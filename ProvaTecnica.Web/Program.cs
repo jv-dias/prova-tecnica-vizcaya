@@ -36,6 +36,9 @@ builder.Services.AddScoped<IAlunoService, AlunoService>();
 //Regra de negócio: Implementar serviço de importação de CSV
 builder.Services.AddScoped<ICsvImportService, CsvImportService>();
 
+//Regra de negócio: Implementar serviço de gerenciamento de turmas
+builder.Services.AddScoped<ITurmaService, TurmaService>();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
