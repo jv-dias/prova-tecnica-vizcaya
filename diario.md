@@ -38,6 +38,7 @@ Este documento relata as decisões, os desafios e o progresso do desenvolvimento
 #### Próximos Passos:
 
 * Com o banco de dados estruturado e conectado, o próximo passo é implementar a lógica de *Seed* para popular as tabelas com dados de teste.
+
 ---
 
 ## Dia 2: 24/08/2025 - Implementação Completa do CRUD de Alunos e Serviços
@@ -75,3 +76,41 @@ Este documento relata as decisões, os desafios e o progresso do desenvolvimento
 * Terminar a implementação da funcionalidade de importação de Alunos via CSV, que ainda não foi concluída.
 * Desenvolver o CRUD para a entidade `Turma`.
 * Construir a lógica e a página para a entidade `Matricula`.
+* 
+---
+
+## Dia 3: 25/08/2025 - Finalização do Módulo de Alunos (Importação CSV) e CRUDS de Turma e Matrícula
+
+**Foco do dia:** Concluir todas as funcionalidades relacionadas à entidade `Aluno` com a implementação da complexa tela de importação via CSV, e em seguida, construir as funcionalidades de negócio para `Turma` e `Matricula`.
+
+#### Progresso e Implementação:
+
+* **Finalização do Módulo de Alunos (Importação CSV):**
+    * **Interface Interativa:** Desenvolvi a página `Importar.razor` com um fluxo de trabalho de revisão interativo. A aplicação agora processa o CSV, cria automaticamente os novos alunos válidos e exibe uma tabela de revisão caso seja encontrado algum CPF duplicado na hora da inserção no banco de dados.
+    * **Revisão de Conflitos:** A tabela de revisão exibe todas as linhas do arquivo com feedback visual (cores) e status claros. Ações de "Atualizar" ou "Ignorar" estão disponíveis apenas para as linhas com CPF duplicado, permitindo que o usuário resolva as pendências caso a caso.
+    * **Tratamento de Erros:** A lógica de validação foi implementada no backend (`CsvImportService`) para identificar registros com dados inválidos (ex: campos obrigatórios vazios), que também são exibidos na tela de revisão com a respectiva mensagem de erro.
+    * **Modelo de CSV:** Implementei uma funcionalidade de "Baixar Modelo", que gera um arquivo CSV formatado com delimitador de ponto e vírgula e codificação "UTF-8 with BOM" para garantir a máxima compatibilidade com o Excel.
+    * **Backend Robusto:** O `CsvImportService` foi refatorado para suportar este fluxo, realizando uma análise completa do arquivo, criando novos registros em lote e retornando uma lista detalhada para a interface do usuário. Todo o processo de leitura de arquivo é feito de forma assíncrona para garantir a performance.
+
+* **CRUD de Turmas:**
+    * **Backend:** Criei a interface `ITurmaService` e sua implementação `TurmaService`, seguindo o padrão estabelecido para o CRUD de Alunos.
+    * **Frontend:** Construí a interface do usuário completa para Turmas, incluindo as páginas de `Index`, `Criar` e `Editar`. Adicionei a funcionalidade de exclusão com diálogo de confirmação diretamente na página de listagem para que não seja necessário navegar até a página de edição para uma exclusão.
+
+* **Funcionalidade de Matrículas:**
+    * **Backend (`MatriculaService`):** Implementei a lógica de negócio principal no `MatriculaService`. O método `AddAsync` agora valida se um aluno está ativo e se já não possui uma matrícula na turma selecionada, cumprindo os requisitos da prova.
+    * **Frontend (Páginas de Matrículas):** Criei as páginas `Index` e `Criar` para Matrículas. A tela de criação exibe nos dropdowns apenas os alunos ativos, aplicando a regra de negócio já na interface.
+
+#### Decisões Tomadas:
+
+* **Fluxo de Importação Interativo:** Decidi abandonar o fluxo de importação em lote por um modelo de revisão interativo, por ser uma solução muito mais robusta e amigável para o usuário final.
+* **Padrão de CRUD:** Continuei a replicar o padrão arquitetural de Serviços + Páginas Blazor para as novas funcionalidades, mantendo a consistência do projeto.
+
+#### Desafios Encontrados:
+
+* O maior desafio foi depurar o `CsvHelper` para lidar corretamente com o delimitador, os cabeçalhos e a leitura assíncrona, resultando em uma implementação de serviço de importação explícita e resiliente com o uso de uma `ClassMap`.
+* Ajustar a interface do usuário em Blazor para refletir as mudanças de estado de cada linha individualmente na tabela de revisão exigiu um gerenciamento de estado cuidadoso na página `Importar.razor` .
+
+#### Próximos Passos:
+
+* Com todas as funcionalidades de negócio implementadas, a próxima e última grande etapa é reativar e finalizar a configuração de **autenticação e autorização** em todo o sistema.
+* Escrever o `README.md` final e preparar o projeto para a entrega.
