@@ -39,6 +39,9 @@ builder.Services.AddScoped<ICsvImportService, CsvImportService>();
 //Regra de negócio: Implementar serviço de gerenciamento de turmas
 builder.Services.AddScoped<ITurmaService, TurmaService>();
 
+//Regra de negócio: Implementar serviço de gerenciamento de matrículas
+builder.Services.AddScoped<IMatriculaService, MatriculaService>();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

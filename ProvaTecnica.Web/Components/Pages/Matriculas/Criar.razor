@@ -1,0 +1,96 @@
+@page "/matriculas/criar"
+@using ProvaTecnica.Core.Entities
+@using ProvaTecnica.Core.Services
+@inject IMatriculaService MatriculaService
+@inject IAlunoService AlunoService
+@inject ITurmaService TurmaService
+@inject NavigationManager Navigation
+
+<PageTitle>Nova Matrícula</PageTitle>
+
+<h3>Realizar Nova Matrícula</h3>
+
+<EditForm Model="@matricula" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="card">
+        <div class="card-body">
+            @if (alunosAtivos is null || turmas is null)
+            {
+                <p><em>Carregando opções...</em></p>
+            }
+            else
+            {
+                <div class="mb-3">
+                    <label for="aluno" class="form-label">Aluno</label>
+                    <InputSelect id="aluno" class="form-select" @bind-Value="matricula.AlunoId">
+                        <option value="0">-- Selecione um aluno --</option>
+                        @foreach (var aluno in alunosAtivos)
+                        {
+                            <option value="@aluno.Id">@aluno.Nome (@aluno.CPF)</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => matricula.AlunoId)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="turma" class="form-label">Turma</label>
+                    <InputSelect id="turma" class="form-select" @bind-Value="matricula.TurmaId">
+                        <option value="0">-- Selecione uma turma --</option>
+                        @foreach (var turma in turmas)
+                        {
+                            <option value="@turma.Id">@turma.Nome (@turma.AnoLetivo)</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => matricula.TurmaId)" />
+                </div>
+            }
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-success">Salvar Matrícula</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+        </div>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-3">@errorMessage</div>
+    }
+
+</EditForm>
+
+
+@code {
+    private Matricula matricula = new();
+    private List<Aluno>? alunosAtivos;
+    private List<Turma>? turmas;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Carrega as listas para preencher os dropdowns
+        var todosAlunos = await AlunoService.GetAllAsync(1, 1000, null, null);
+        alunosAtivos = todosAlunos.Items.Where(a => a.Ativo).ToList();
+
+        turmas = await TurmaService.GetAllAsync();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        errorMessage = null;
+        try
+        {
+            await MatriculaService.AddAsync(matricula);
+            Navigation.NavigateTo("/matriculas");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void Cancelar()
+    {
+        Navigation.NavigateTo("/matriculas");
+    }
+}

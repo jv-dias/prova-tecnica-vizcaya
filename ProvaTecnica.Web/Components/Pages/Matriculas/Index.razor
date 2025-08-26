@@ -1,0 +1,89 @@
+@page "/matriculas"
+@using ProvaTecnica.Core.Entities
+@using ProvaTecnica.Core.Services
+@inject IMatriculaService MatriculaService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Lista de Matrículas</PageTitle>
+
+<h3>Lista de Matrículas</h3>
+
+<p>
+    <button class="btn btn-primary" @onclick="NovaMatricula">Realizar Nova Matrícula</button>
+</p>
+
+@if (matriculas is null)
+{
+    <p><em>Carregando...</em></p>
+}
+else if (!matriculas.Any())
+{
+    <p>Nenhuma matrícula encontrada.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Aluno</th>
+                <th>Turma</th>
+                <th>Data da Matrícula</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var matricula in matriculas)
+            {
+                <tr>
+                    <td>@matricula.Aluno?.Nome</td>
+                    <td>@matricula.Turma?.Nome</td>
+                    <td>@matricula.DataMatricula.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        <span class="badge @(matricula.Status == StatusMatricula.Ativa ? "bg-success" : "bg-danger")">
+                            @matricula.Status
+                        </span>
+                    </td>
+                    <td>
+                        @if (matricula.Status == StatusMatricula.Ativa)
+                        {
+                            <button class="btn btn-sm btn-warning" @onclick="() => CancelarMatricula(matricula)">
+                                Cancelar
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Matricula>? matriculas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarMatriculas();
+    }
+
+    private async Task CarregarMatriculas()
+    {
+        matriculas = await MatriculaService.GetAllAsync();
+    }
+
+    private void NovaMatricula()
+    {
+        Navigation.NavigateTo("/matriculas/criar");
+    }
+
+    private async Task CancelarMatricula(Matricula matricula)
+    {
+        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"Tem certeza que deseja cancelar a matrícula do aluno '{matricula.Aluno?.Nome}' na turma '{matricula.Turma?.Nome}'?");
+        if (confirmado)
+        {
+            await MatriculaService.CancelAsync(matricula.Id);
+            await CarregarMatriculas();
+        }
+    }
+}
