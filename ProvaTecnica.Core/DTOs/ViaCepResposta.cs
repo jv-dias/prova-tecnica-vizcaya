@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace ProvaTecnica.Core.DTOs
 {
-	public class ViaCepResponse
+	public class ViaCepResposta
 	{
 		[JsonPropertyName("cep")]
 		public string? Cep { get; set; }

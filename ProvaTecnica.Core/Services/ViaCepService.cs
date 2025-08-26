@@ -16,9 +16,9 @@ namespace ProvaTecnica.Core.Services
 			_cache = cache;
 		}
 
-		public async Task<ViaCepResponse?> ConsultarCepAsync(string cep)
+		public async Task<ViaCepResposta?> ConsultarCepAsync(string cep)
 		{
-			if (_cache.TryGetValue(cep, out ViaCepResponse? cachedResponse))
+			if (_cache.TryGetValue(cep, out ViaCepResposta? cachedResponse))
 			{
 				return cachedResponse;
 			}
@@ -26,7 +26,7 @@ namespace ProvaTecnica.Core.Services
 			var httpClient = _httpClientFactory.CreateClient();
 			try
 			{
-				var response = await httpClient.GetFromJsonAsync<ViaCepResponse>($"https://viacep.com.br/ws/{cep}/json/");
+				var response = await httpClient.GetFromJsonAsync<ViaCepResposta>($"https://viacep.com.br/ws/{cep}/json/");
 
 				var cacheOptions = new MemoryCacheEntryOptions()
 					.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
