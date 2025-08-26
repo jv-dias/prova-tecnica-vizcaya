@@ -1,0 +1,182 @@
+@page "/alunos/importar"
+@using ProvaTecnica.Core.Enums
+@using ProvaTecnica.Core.Services
+@using ProvaTecnica.Core.DTOs
+@using ProvaTecnica.Core.Entities
+@inject ICsvImportService CsvImportService
+@inject IAlunoService AlunoService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Importar e Revisar Alunos</PageTitle>
+
+<h3>Importar e Revisar Alunos</h3>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <p class="mb-2">Selecione um arquivo CSV para importar. Alunos com CPF novo serão criados automaticamente.</p>
+        <p>
+            <button class="btn btn-link ps-0 pt-0" @onclick="BaixarModelo">
+                <span class="bi bi-download"></span> Baixar Modelo de Planilha
+            </button>
+        </p>
+        <div class="mb-3">
+            <label for="file-upload" class="form-label">Arquivo CSV</label>
+            <InputFile id="file-upload" class="form-control" OnChange="OnArquivoSelecionado" disabled="@processando" />
+        </div>
+    </div>
+</div>
+
+@if (processando)
+{
+    <div class="d-flex align-items-center">
+        <strong role="status">Processando arquivo...</strong>
+        <div class="spinner-border ms-auto" aria-hidden="true"></div>
+    </div>
+}
+
+@if (linhasParaRevisao.Any())
+{
+    <h4>Ação Necessária: CPFs Duplicados</h4>
+    <p>As seguintes linhas correspondem a CPFs que já existem no sistema. Por favor, escolha uma ação para cada uma.</p>
+    
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Email</th>
+                <th>Status / Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var linha in linhasParaRevisao)
+            {
+                <tr class="@GetRowClass(linha)">
+                    <td>@linha.AlunoDoCsv.Nome</td>
+                    <td>@linha.AlunoDoCsv.CPF</td>
+                    <td>@linha.AlunoDoCsv.Email</td>
+                    <td class="text-center">
+
+                        @switch (linha.Status)
+                        {
+                            case StatusImportacao.ProcessadoCriado:
+                                <span class="badge bg-success">Criado</span>;
+                                break;
+                            case StatusImportacao.Duplicado:
+                                <button class="btn btn-sm btn-warning" @onclick="() => AtualizarAluno(linha)">Atualizar</button>
+                                <button class="btn btn-sm btn-secondary" @onclick="() => IgnorarAluno(linha)">Ignorar</button>;
+                                break;
+                            case StatusImportacao.ErroDeValidacao:
+                                <span class="badge bg-secondary" title="@linha.MensagemErro">Erro de Validação</span>;
+                                break;
+                            case StatusImportacao.ProcessadoAtualizado:
+                                <span class="badge bg-warning text-dark">Atualizado</span>;
+                                break;
+                            case StatusImportacao.ProcessadoIgnorado:
+                                <span class="badge bg-danger">Ignorado</span>;
+                                break;
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (TodosConflitosResolvidos)
+    {
+        <div class="alert alert-success d-flex justify-content-between align-items-center mt-3">
+            <span>Revisão concluída! Você pode limpar a tela ou voltar para a lista de alunos.</span>
+            <div>
+                <button class="btn btn-light" @onclick="VoltarParaLista">Voltar para Lista</button>
+                <button class="btn btn-primary" @onclick="Concluir">Limpar Tela</button>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<LinhaCsvAluno> linhasParaRevisao = new();
+    private bool processando;
+    private bool TodosConflitosResolvidos => linhasParaRevisao.Any() && linhasParaRevisao.All(l => l.Status != StatusImportacao.Duplicado);
+
+    private async Task OnArquivoSelecionado(InputFileChangeEventArgs e)
+    {
+        processando = true;
+        linhasParaRevisao.Clear();
+        StateHasChanged();
+
+        try
+        {
+            await using var stream = e.File.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            linhasParaRevisao = await CsvImportService.ProcessarCsvAsync(stream);
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Erro ao ler o arquivo: {ex.Message}");
+        }
+        finally
+        {
+            processando = false;
+        }
+    }
+
+    private async Task AtualizarAluno(LinhaCsvAluno linha)
+    {
+        if (linha.AlunoExistente is null) return;
+
+        var alunoParaAtualizar = linha.AlunoExistente;
+        alunoParaAtualizar.Nome = linha.AlunoDoCsv.Nome;
+        alunoParaAtualizar.Email = linha.AlunoDoCsv.Email;
+        alunoParaAtualizar.CEP = linha.AlunoDoCsv.CEP;
+        alunoParaAtualizar.Logradouro = linha.AlunoDoCsv.Logradouro;
+        alunoParaAtualizar.Complemento = linha.AlunoDoCsv.Complemento;
+        alunoParaAtualizar.Bairro = linha.AlunoDoCsv.Bairro;
+        alunoParaAtualizar.Cidade = linha.AlunoDoCsv.Cidade;
+        alunoParaAtualizar.UF = linha.AlunoDoCsv.UF;
+        alunoParaAtualizar.Ativo = linha.AlunoDoCsv.Ativo;
+
+        await AlunoService.UpdateAsync(alunoParaAtualizar);
+        linha.Status = StatusImportacao.ProcessadoAtualizado;
+    }
+
+    private void IgnorarAluno(LinhaCsvAluno linha)
+    {
+        linha.Status = StatusImportacao.ProcessadoIgnorado;
+    }
+
+    private async Task Concluir()
+    {
+        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", "Deseja limpar a tela de revisão?");
+        if (confirmado)
+        {
+            linhasParaRevisao.Clear();
+        }
+    }
+    
+    private void VoltarParaLista()
+    {
+        Navigation.NavigateTo("/alunos");
+    }
+
+    private string GetRowClass(LinhaCsvAluno linha)
+    {
+        return linha.Status switch
+        {
+            StatusImportacao.ProcessadoCriado => "table-success",
+            StatusImportacao.ProcessadoAtualizado => "table-warning",
+            StatusImportacao.ProcessadoIgnorado => "table-danger",
+            StatusImportacao.ErroDeValidacao => "table-secondary",
+            _ => ""
+        };
+    }
+    
+    private async Task BaixarModelo()
+    {
+        var cabecalhos = "Nome;CPF;Email;Ativo;CEP;Logradouro;Complemento;Bairro;Cidade;UF";
+        var fileBytes = System.Text.Encoding.UTF8.GetBytes(cabecalhos);
+        var bom = System.Text.Encoding.UTF8.GetPreamble();
+        var fileBytesWithBom = bom.Concat(fileBytes).ToArray();
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBytes", "modelo_alunos.csv", "text/csv", fileBytesWithBom);
+    }
+}
