@@ -1,6 +1,6 @@
 # Diário de Desenvolvimento – Prova Técnica .NET Blazor
 
-**Candidato:** João Victor da Silva Dias
+**Candidato:** João Victor Dias
 
 **Data de Início:** 23/08/2025
 

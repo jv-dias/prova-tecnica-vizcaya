@@ -85,4 +85,4 @@ O sistema é populado com dois usuários de teste com diferentes níveis de perm
     * **Senha:** `MeContrata@123`
 
 ---
-*Este projeto foi desenvolvido por João Victor da Silva Dias.*
+*Este projeto foi desenvolvido por João Victor Dias.*
