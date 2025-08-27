@@ -42,6 +42,9 @@ builder.Services.AddScoped<ITurmaService, TurmaService>();
 //Regra de negócio: Implementar serviço de gerenciamento de matrículas
 builder.Services.AddScoped<IMatriculaService, MatriculaService>();
 
+//Regra de negócio: Implementar serviço de dashboard
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -86,6 +89,12 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapAdditionalIdentityEndpoints();
+
+app.MapGet("/Logout", async (SignInManager<ApplicationUser> signInManager, HttpContext context) =>
+{
+    await signInManager.SignOutAsync();
+    context.Response.Redirect("/");
+});
 
 try
 {
