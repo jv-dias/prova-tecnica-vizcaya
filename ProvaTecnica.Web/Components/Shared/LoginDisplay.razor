@@ -1,0 +1,12 @@
+@rendermode InteractiveServer
+
+<AuthorizeView>
+    <Authorized>
+        <a href="Account/Manage">Olá, @context.User.Identity?.Name!</a>
+        <a href="/Logout" class="nav-link btn btn-link">Logout</a>
+    </Authorized>
+    <NotAuthorized>
+        <a href="Account/Register">Registrar</a>
+        <a href="Account/Login">Login</a>
+    </NotAuthorized>
+</AuthorizeView>

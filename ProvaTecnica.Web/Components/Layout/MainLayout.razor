@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components.Authorization
+@using ProvaTecnica.Web.Components.Shared
 
 <div class="page">
 
@@ -17,21 +18,27 @@
                                 <span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
                             </NavLink>
                         </li>
-                        <li class="nav-item">
-                            <NavLink class="nav-link" href="alunos">
-                                <span class="bi bi-people-fill" aria-hidden="true"></span> Alunos
-                            </NavLink>
-                        </li>
-                        <li class="nav-item">
-                            <NavLink class="nav-link" href="turmas">
-                                <span class="bi bi-journal-bookmark-fill" aria-hidden="true"></span> Turmas
-                            </NavLink>
-                        </li>
-                        <li class="nav-item">
-                            <NavLink class="nav-link" href="matriculas">
-                                <span class="bi bi-card-checklist" aria-hidden="true"></span> Matrículas
-                            </NavLink>
-                        </li>
+
+                        <AuthorizeView Roles="Admin, Professor">
+                            <li class="nav-item">
+                                <NavLink class="nav-link" href="alunos">
+                                    <span class="bi bi-people-fill" aria-hidden="true"></span> Alunos
+                                </NavLink>
+                            </li>
+                        </AuthorizeView>
+
+                        <AuthorizeView Roles="Admin">
+                            <li class="nav-item">
+                                <NavLink class="nav-link" href="turmas">
+                                    <span class="bi bi-journal-bookmark-fill" aria-hidden="true"></span> Turmas
+                                </NavLink>
+                            </li>
+                            <li class="nav-item">
+                                <NavLink class="nav-link" href="matriculas">
+                                    <span class="bi bi-card-checklist" aria-hidden="true"></span> Matrículas
+                                </NavLink>
+                            </li>
+                        </AuthorizeView>
                     </ul>
                 </div>
                 <div class="ms-auto text-light">
