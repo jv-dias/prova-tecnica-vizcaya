@@ -114,3 +114,42 @@ Este documento relata as decisões, os desafios e o progresso do desenvolvimento
 
 * Com todas as funcionalidades de negócio implementadas, a próxima e última grande etapa é reativar e finalizar a configuração de **autenticação e autorização** em todo o sistema.
 * Escrever o `README.md` final e preparar o projeto para a entrega.
+
+---
+
+## Dia 4: 26/08/2025 - Finalização da Autenticação e Polimento da Aplicação
+
+**Foco do dia:** Reativar e depurar completamente o sistema de autenticação e autorização, garantindo que todas as regras de acesso funcionem como esperado. Adicionar os toques finais na aplicação para melhorar a apresentação e a experiência do usuário.
+
+#### Progresso e Implementação:
+
+* **Reativação e Correção da Autenticação:**
+    * Iniciei o processo de reativação da segurança adicionando o atributo `@attribute [Authorize]` à `Home.razor`. Isso corrigiu o fluxo inicial e garantiu que usuários não autenticados sejam corretamente redirecionados para a página de login.
+
+* **Implementação da Autorização (Roles):**
+    * **Navegação:** Apliquei as regras de autorização baseadas em `Roles` no menu principal (`MainLayout.razor`). O link "Alunos" agora é visível para "Admin" e "Professor", enquanto "Turmas" e "Matrículas" são visíveis apenas para o "Admin".
+    * **Conteúdo Dinâmico:** A mesma lógica de autorização foi aplicada aos cards do dashboard na `Home.razor`, garantindo que o usuário "Professor" veja apenas as estatísticas de alunos, enquanto o "Admin" vê todas as métricas.
+
+* **Resolução do Bug de Logout:**
+    * O desafio mais complexo do dia foi corrigir o botão de Logout, que apresentava erros de *"Antiforgery Token"* e *"Headers are read-only"*.
+    * Após várias tentativas de depuração com formulários estáticos e métodos interativos, uma solução temporária foi implementada devido ao prazo de entrega.
+    * Criei um **Endpoint Mínimo (Minimal API)** diretamente no `Program.cs` para a rota `/Logout`. Este endpoint lida de forma segura e atômica com a ação de `SignOutAsync` e o redirecionamento, eliminando os conflitos entre os modos de renderização interativo e estático do Blazor.
+
+* **Dashboard na Home Page:**
+    * Para enriquecer a apresentação do projeto, implementei o "mini-dashboard" na `Home.razor`.
+    * Criei um `DashboardService` para buscar estatísticas do banco de dados de forma eficiente (`Total de Alunos`, `Total de Turmas`, etc.).
+    * A Home page agora exibe esses dados em cards interativos que também servem como links para as seções correspondentes.
+    * Havia preparado um design mais elaborado, contudo, optei por uma abordagem mais simples e funcional para garantir a entrega dentro do prazo.
+
+#### Decisões Tomadas:
+
+* **Endpoint Mínimo para Logout:** Diante da persistência dos erros de segurança, decidi abandonar as abordagens baseadas em formulários dentro de componentes e optei por um Minimal API. Essa decisão isolou a lógica de logout em um contexto puramente de backend, provando ser uma solução viável.
+
+#### Desafios Encontrados:
+
+* O principal desafio foi, sem dúvida, depurar a interação complexa entre os componentes interativos do Blazor Server, o sistema de Antiforgery e os endpoints estáticos do ASP.NET Core Identity. A resolução exigiu uma compreensão profunda do ciclo de vida da requisição HTTP em contraste com a conexão SignalR do Blazor.
+
+#### Próximos Passos:
+
+* O projeto está **funcional e seguro**.
+* As últimas tarefas são a criação do arquivo `README.md` com as instruções de setup.
